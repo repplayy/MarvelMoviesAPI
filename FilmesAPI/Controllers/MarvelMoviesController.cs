@@ -10,27 +10,41 @@ namespace FilmesAPI.Controllers
     public class MarvelMoviesController : ControllerBase
     {
         private static List<Movie> movies = new List<Movie>();
-
+        private static int id = 1;
 
         [HttpPost]
 
-        public void AddMovie([FromBody] Movie movie)
+        public IActionResult AddMovie([FromBody] Movie movie)
         {
 
+            movie.Id = id++;
             movies.Add(movie);
-            Console.WriteLine(movie.Title);
+            return CreatedAtAction(nameof(RecoverById), new {Id = movie.Id}, movie);
 
         }
 
         [HttpGet]
 
-        public IEnumerable<Movie> RecoverMovies()
+        public IActionResult RecoverMovies()
         {
-            return movies;
+            return Ok(movies);
         }
 
 
+        [HttpGet("{id}")]
 
+        public IActionResult RecoverById(int id )
+        {
+
+            Movie movie = movies.FirstOrDefault(movie => movie.Id == id);
+
+
+            if (movie != null)
+            {
+                return Ok(movie);
+            }
+            return NotFound();
+        }
 
 
 
