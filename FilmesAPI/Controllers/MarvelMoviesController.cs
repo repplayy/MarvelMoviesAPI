@@ -1,6 +1,8 @@
-﻿using FilmesAPI.Data;
+﻿using AutoMapper;
+using FilmesAPI.Data;
 using FilmesAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using MoviesAPI.Data.Dtos;
 
 namespace FilmesAPI.Controllers
 {
@@ -11,17 +13,19 @@ namespace FilmesAPI.Controllers
     public class MarvelMoviesController : ControllerBase
     {
         private MovieContext _context;
+        private IMapper _mapper;
 
-        public MarvelMoviesController(MovieContext context)
+        public MarvelMoviesController(MovieContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpPost]
 
-        public IActionResult AddMovie([FromBody] Movie movie)
+        public IActionResult AddMovie([FromBody] CreateMovieDto movieDto)
         {
-
+            Movie movie = _mapper.Map<Movie>(movieDto);
             _context.Movies.Add(movie);
             _context.SaveChanges();
             return CreatedAtAction(nameof(RecoverById), new { Id = movie.Id }, movie);
@@ -30,9 +34,9 @@ namespace FilmesAPI.Controllers
 
         [HttpGet]
 
-        public IActionResult RecoverMovies()
+        public IEnumerable<Movie> RecoverMovies()
         {
-            return Ok(_context.Movies);
+            return _context.Movies;
         }
 
 
@@ -46,7 +50,8 @@ namespace FilmesAPI.Controllers
 
             if (movie != null)
             {
-                return Ok(movie);
+                ReadMovieDto movieDto = _mapper.Map<ReadMovieDto>(movie);
+                return Ok(movieDto);
             }
             return NotFound();
         }
@@ -54,7 +59,7 @@ namespace FilmesAPI.Controllers
 
         [HttpPut("{id}")]
 
-        public IActionResult UpdateById(int id, [FromBody] Movie newMovie)
+        public IActionResult UpdateById(int id, [FromBody] UpdateMovieDto movieDto)
         {
             Movie movie = _context.Movies.FirstOrDefault(movie => movie.Id == id);
 
@@ -64,11 +69,7 @@ namespace FilmesAPI.Controllers
                 return NotFound();
             }
 
-            movie.Title = newMovie.Title;
-            movie.time = newMovie.time;
-            movie.Director = newMovie.Director;
-            movie.Date = newMovie.Date;
-            movie.Gender = newMovie.Gender;
+            _mapper.Map(movieDto, movie);
             _context.SaveChanges();
             return NoContent();
         }
